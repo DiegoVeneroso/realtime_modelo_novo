@@ -118,36 +118,46 @@ class HomeRepository {
 
   itemUpdateRepository(Map map) async {
     try {
-      await ApiClient.storage.deleteFile(
-        bucketId: constants.itemBucket,
-        fileId: map["id"],
-      );
+      if (map["imagePath"] == '') {
+        await ApiClient.databases.updateDocument(
+            databaseId: constants.databaseId,
+            collectionId: constants.collectionId,
+            documentId: map["id"],
+            data: {
+              'name': map["name"],
+            });
+      } else {
+        await ApiClient.storage.deleteFile(
+          bucketId: constants.itemBucket,
+          fileId: map["id"],
+        );
 
-      final idUnique = map["id"];
+        final idUnique = map["id"];
 
-      String fileName = "$idUnique."
-          "${map["imagePath"].split(".").last}";
+        String fileName = "$idUnique."
+            "${map["imagePath"].split(".").last}";
 
-      var urlImage =
-          '${constants.API_END_POINT_STORAGE}${constants.itemBucket}/files/$idUnique/view?project=${constants.PROJECT_ID}';
+        var urlImage =
+            '${constants.API_END_POINT_STORAGE}${constants.itemBucket}/files/$idUnique/view?project=${constants.PROJECT_ID}';
 
-      await ApiClient.storage.createFile(
-        bucketId: constants.itemBucket,
-        fileId: idUnique,
-        file: InputFile(
-          path: map["imagePath"],
-          filename: fileName,
-        ),
-      );
+        await ApiClient.storage.createFile(
+          bucketId: constants.itemBucket,
+          fileId: idUnique,
+          file: InputFile(
+            path: map["imagePath"],
+            filename: fileName,
+          ),
+        );
 
-      await ApiClient.databases.updateDocument(
-          databaseId: constants.databaseId,
-          collectionId: constants.collectionId,
-          documentId: map["id"],
-          data: {
-            'name': map["name"],
-            'image': urlImage,
-          });
+        await ApiClient.databases.updateDocument(
+            databaseId: constants.databaseId,
+            collectionId: constants.collectionId,
+            documentId: map["id"],
+            data: {
+              'name': map["name"],
+              'image': urlImage,
+            });
+      }
     } on AppwriteException catch (e) {
       log(e.response['type']);
 

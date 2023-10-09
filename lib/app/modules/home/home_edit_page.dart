@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:validatorless/validatorless.dart';
 
 import '../../core/ui/app_state.dart';
@@ -133,7 +134,9 @@ class _HomeAddPageState extends AppState<HomeEditPage, HomeController> {
                             controller.itemUpdate({
                               'id': Get.parameters['id'],
                               'name': _nameEC.text,
-                              'imagePath': controller.imageFile!.path,
+                              'imagePath': controller.imageFile == null
+                                  ? ''
+                                  : controller.imageFile!.path,
                             });
                           }
                         },
