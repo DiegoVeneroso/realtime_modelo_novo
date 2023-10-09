@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -55,6 +56,67 @@ class _HomeAddPageState extends AppState<HomeAddPage, HomeController> {
                     const SizedBox(
                       height: 30,
                     ),
+                    controller.imageFile == null
+                        ? const Center(
+                            child: CircleAvatar(
+                              radius: 80,
+                              backgroundImage: AssetImage(
+                                  'assets/images/profile_avatar.jpg'),
+                              backgroundColor: Colors.black,
+                            ),
+                          )
+                        : Center(
+                            child: Container(
+                              width: 180,
+                              height: 180,
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey,
+                                  image: DecorationImage(
+                                    fit: BoxFit.fitHeight,
+                                    image: FileImage(
+                                      File(controller.imageFile!.path),
+                                    ),
+                                  )),
+                            ),
+                          ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () async {
+                            await controller.pickImageFileFromGalery();
+                            setState(() {
+                              controller.imageFile;
+                            });
+                          },
+                          icon: const Icon(
+                            Icons.image_outlined,
+                            color: Colors.grey,
+                            size: 30,
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            await controller.captureImageFileFromCamera();
+                            setState(() {
+                              controller.imageFile;
+                            });
+                          },
+                          icon: const Icon(
+                            Icons.camera_alt_outlined,
+                            color: Colors.grey,
+                            size: 30,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 30,
+                    ),
                     CustomTextformfield(
                       label: 'Nome',
                       controller: _nameEC,
@@ -72,10 +134,8 @@ class _HomeAddPageState extends AppState<HomeAddPage, HomeController> {
                               _formKey.currentState?.validate() ?? false;
                           if (formValid) {
                             controller.itemAdd({
-                              'id': DateTime.now()
-                                  .microsecondsSinceEpoch
-                                  .toString(),
                               'name': _nameEC.text,
+                              'imagePath': controller.imageFile!.path,
                             });
                           }
                         },

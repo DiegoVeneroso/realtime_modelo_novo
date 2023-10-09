@@ -1,7 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:io';
+
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:realtime_modelo/app/core/config/api_client.dart';
 import 'package:realtime_modelo/app/core/mixins/dialog_mixin.dart';
@@ -19,9 +22,12 @@ class HomeController extends GetxController
   final _loading = false.obs;
   final _message = Rxn<MessageModel>();
   final _dialog = Rxn<DialogModel>();
-  var ItemList = <ItemModel>[].obs;
-
+  var itemList = <ItemModel>[].obs;
   Rx<List<ItemModel>> foundItem = Rx<List<ItemModel>>([]);
+
+  late Rx<File?> pickedFile;
+  File? get profileImage => pickedFile.value;
+  XFile? imageFile;
 
   HomeController({
     required this.repository,
@@ -32,7 +38,7 @@ class HomeController extends GetxController
     loaderListener(_loading);
     messageListener(_message);
     dialogListener(_dialog);
-    foundItem.value = ItemList;
+    foundItem.value = itemList;
 
     super.onInit();
   }
@@ -46,6 +52,24 @@ class HomeController extends GetxController
     super.onReady();
   }
 
+  pickImageFileFromGalery() async {
+    imageFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (imageFile != null) {
+      Get.snackbar(
+          'Imagem de Perfil', 'Sucesso em selecionar imagem da galeria!');
+    }
+  }
+
+  captureImageFileFromCamera() async {
+    imageFile = await ImagePicker().pickImage(source: ImageSource.camera);
+    if (imageFile != null) {
+      print(imageFile!.path);
+      Get.snackbar(
+          'Imagem de Perfil', 'Sucesso em selecionar imagem da camera!');
+    }
+    pickedFile = Rx<File?>(File(imageFile!.path));
+  }
+
   getDialog({
     required String idItem,
     required String item,
@@ -57,15 +81,17 @@ class HomeController extends GetxController
     ));
   }
 
-  void filterItem(String ItemName) {
+  void filterItem(String itemName) {
     List<ItemModel> results = [];
-    if (ItemName.isEmpty) {
-      results = ItemList;
+    if (itemName.isEmpty) {
+      results = itemList;
     } else {
-      results = ItemList.where((element) => element.name
-          .toString()
-          .toLowerCase()
-          .contains(ItemName.toLowerCase())).toList();
+      results = itemList
+          .where((element) => element.name
+              .toString()
+              .toLowerCase()
+              .contains(itemName.toLowerCase()))
+          .toList();
     }
     foundItem.value = results;
   }
@@ -86,7 +112,7 @@ class HomeController extends GetxController
       _loading.toggle();
       var dataRepository = await repository.loadDataRepository();
 
-      ItemList.assignAll(dataRepository);
+      itemList.assignAll(dataRepository);
     } finally {
       _loading.toggle();
     }
@@ -103,41 +129,13 @@ class HomeController extends GetxController
       for (var ev in data.events) {
         switch (ev) {
           case "databases.*.collections.*.documents.*.create":
-            // var item = data.payload;
-            // ItemList.add(ItemModel(name: item['name']));
             loadData();
             break;
           case "databases.*.collections.*.documents.*.update":
-            // var items = data.payload;
-            // print('id2');
-            // print(items['\$id']);
-
-            // items.forEach((key, value) {
-            //   print('key[2]');
-            //   print(key);
-
-            //   print('value[' '');
-            //   print(value);
-            // });
-
-            // for (var it in items) {
-            //   print('id');
-            //   print(it.toString());
-            //   // if (int.parse(it['\$id']) == items['\$id']) {
-            //   //   it['name'] = items['name'];
-            //   // }
-            // }
             loadData();
-
             break;
           case "databases.*.collections.*.documents.*.delete":
-            // var item = data.payload;
-
-            // print('item');
-            // print(item['\$id']);
-            // ItemList.removeWhere((it) => it.id == item['\$id']);
             loadData();
-
             break;
           default:
             break;
